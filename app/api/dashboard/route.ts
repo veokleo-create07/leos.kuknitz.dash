@@ -32,9 +32,27 @@ export async function GET(request:NextRequest) {
 export async function POST(request:NextRequest) {
   try {
     const body=await request.json() as Record<string,unknown>, action=clean(body.action);
+    if(action==="delete-reservations") {
+      const rawIds=body.ids;
+      const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if(!Array.isArray(rawIds)||rawIds.length===0||rawIds.length>500||rawIds.some(id=>typeof id!=="string"||!uuid.test(id)))
+        return json({error:"Select between 1 and 500 valid reservations."},400);
+      const ids=[...new Set(rawIds as string[])];
+      const deleted=await db("rpc/staff_delete_reservations",{method:"POST",body:JSON.stringify({p_ids:ids})}) as number;
+      return json({ok:true,deleted:Number(deleted)||0});
+    }
     if(action==="create-reservation") {
+      const requestId=clean(body.requestId), uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if(!uuid.test(requestId)) return json({error:"Invalid booking request. Please try again."},400);
       const p={p_date:clean(body.date),p_time:clean(body.time),p_guests:Number(body.guests),p_name:clean(body.name),p_email:clean(body.email)||"no-email@invalid.local",p_phone:clean(body.phone),p_notes:clean(body.notes),p_source:clean(body.source)||"Phone"};
-      const id=await db("rpc/staff_create_reservation",{method:"POST",body:JSON.stringify(p)}) as string;
+      let id:string;
+      try {
+        id=await db("rpc/staff_create_reservation_idempotent",{method:"POST",body:JSON.stringify({...p,p_request_id:requestId})}) as string;
+      } catch(e) {
+        if(!(e instanceof SupabaseError)||e.status!==404) throw e;
+        // Keep bookings available while the idempotency migration is being applied.
+        id=await db("rpc/staff_create_reservation",{method:"POST",body:JSON.stringify(p)}) as string;
+      }
       return json({id},201);
     }
     if(action==="update-reservation") {
