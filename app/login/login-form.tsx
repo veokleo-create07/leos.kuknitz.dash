@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, ShoppingBag } from "lucide-react";
+import { LanguageToggle, Translated } from "@/components/language";
 
 const errors: Record<string, string> = {
   invalid_credentials: "That password isn’t correct. Check it and try again.",
@@ -12,7 +13,7 @@ const errors: Record<string, string> = {
 
 export default function LoginForm({ errorCode, signedOut }: { errorCode?: string; signedOut: boolean }) {
   return (
-    <main className="login-shell">
+    <Translated><main className="login-shell">
       <section className="login-brand-panel" aria-label="Leo’s Juice & Burger">
         <div className="login-brand">
           <span className="brand-mark"><ShoppingBag size={20} /></span>
@@ -28,6 +29,7 @@ export default function LoginForm({ errorCode, signedOut }: { errorCode?: string
 
       <section className="login-form-panel">
         <div className="login-form-wrap">
+          <LanguageToggle className="login-language" />
           <p className="eyebrow">Staff workspace</p>
           <h2 className="login-title">Welcome back</h2>
           <p className="login-description">Enter the shared staff password to continue.</p>
@@ -52,6 +54,6 @@ export default function LoginForm({ errorCode, signedOut }: { errorCode?: string
           <p className="login-help">Ask your manager for the staff password.</p>
         </div>
       </section>
-    </main>
+    </main></Translated>
   );
 }

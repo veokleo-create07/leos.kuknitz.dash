@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { LanguageProvider } from "@/components/language";
 
 export const metadata: Metadata = {
   title: "Leo's Juice & Burger — Staff dashboard",
@@ -7,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}</body></html>;
+  return <html lang="de"><body><LanguageProvider>{children}</LanguageProvider></body></html>;
 }
