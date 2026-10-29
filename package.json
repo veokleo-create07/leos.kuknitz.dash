@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint app lib middleware.ts next.config.ts",
-    "typecheck": "tsc --noEmit",
-    "hash-password": "node scripts/hash-staff-password.mjs"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.14",

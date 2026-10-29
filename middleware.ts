@@ -3,6 +3,19 @@ import { NextResponse, type NextRequest } from "next/server";
 const cookieName = "leo_staff_session";
 const loginPath = "/login";
 const sessionSeconds = 60 * 60 * 8;
+const sessionKeyLabel = "Leo's Juice & Burger staff session signing key v1";
+
+async function sessionSigningKey(password: string, usage: KeyUsage) {
+  const baseKey = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const keyBytes = await crypto.subtle.sign("HMAC", baseKey, new TextEncoder().encode(sessionKeyLabel));
+  return crypto.subtle.importKey("raw", keyBytes, { name: "HMAC", hash: "SHA-256" }, false, [usage]);
+}
 
 function decodeBase64Url(value: string) {
   const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -11,20 +24,13 @@ function decodeBase64Url(value: string) {
 }
 
 async function validSession(token: string | undefined) {
-  const secret = process.env.STAFF_SESSION_SECRET;
-  const passwordHash = process.env.STAFF_SHARED_PASSWORD_HASH;
-  if (!secret || secret.length < 32 || !passwordHash || !token) return false;
+  const password = process.env.STAFF_SHARED_PASSWORD;
+  if (!password || !token) return false;
   const [payload, signature, extra] = token.split(".");
   if (!payload || !signature || extra) return false;
 
   try {
-    const key = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(`${secret}:${passwordHash}`),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["verify"],
-    );
+    const key = await sessionSigningKey(password, "verify");
     const verified = await crypto.subtle.verify(
       "HMAC",
       key,
@@ -41,20 +47,13 @@ async function validSession(token: string | undefined) {
 }
 
 async function refreshSession() {
-  const secret = process.env.STAFF_SESSION_SECRET;
-  const passwordHash = process.env.STAFF_SHARED_PASSWORD_HASH;
-  if (!secret || !passwordHash) return null;
+  const password = process.env.STAFF_SHARED_PASSWORD;
+  if (!password) return null;
   const payload = btoa(JSON.stringify({
     exp: Math.floor(Date.now() / 1000) + sessionSeconds,
     nonce: Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, "0")).join(""),
   })).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(`${secret}:${passwordHash}`),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
+  const key = await sessionSigningKey(password, "sign");
   const signature = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload)));
   const encodedSignature = btoa(String.fromCharCode(...signature)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
   return `${payload}.${encodedSignature}`;
@@ -68,7 +67,7 @@ export async function middleware(request: NextRequest) {
 
   if (isLoginAction) return NextResponse.next();
 
-  if (!process.env.STAFF_SHARED_PASSWORD_HASH || !process.env.STAFF_SESSION_SECRET || process.env.STAFF_SESSION_SECRET.length < 32) {
+  if (!process.env.STAFF_SHARED_PASSWORD) {
     if (isLogin) {
       const response = NextResponse.next();
       response.headers.set("Cache-Control", "no-store");
