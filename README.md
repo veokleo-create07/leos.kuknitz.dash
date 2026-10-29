@@ -1,25 +1,24 @@
 # Leo’s Juice & Burger — Staff dashboard
 
-A responsive staff dashboard prototype for managing daily reservations, guest inquiries, and service analytics.
+Staff dashboard for the restaurant’s existing Supabase reservation system. It keeps the current shared-password authentication and uses server-only database access after the protected dashboard session is validated.
 
-## Run locally
+## Local setup
 
-Install dependencies with `npm install`, copy `.env.example` to `.env.local`, set `STAFF_SHARED_PASSWORD`, and run `npm run dev`. Open http://localhost:3000.
+1. Install dependencies with `npm install`.
+2. Copy `.env.example` to `.env.local`.
+3. Set `STAFF_SHARED_PASSWORD`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`.
+4. Run `npm run dev` and open http://localhost:3000.
 
-## Stack
+Use the existing project URL and its service-role key from the Supabase project settings. Keep the service-role key on the server only. Do not use a `NEXT_PUBLIC_` prefix, commit `.env.local`, or paste the key into chat.
 
-- Next.js App Router, React, and TypeScript
-- Tailwind CSS 4 with a small custom design system
-- Lucide icons and Recharts
+## Database migration
 
-## Prototype data
+Run `supabase/migrations/20261029000000_staff_dashboard.sql` once in the Supabase SQL Editor. It adds dashboard metadata to the existing `reservations` and `reservation_inquiries` tables and creates server-only booking/update/conversion RPCs. It does not recreate either table or change the public website booking RPC.
 
-Mock reservations and inquiries are kept in `lib/mock-data.ts`, with shared data types in `lib/types.ts`. Dashboard changes are saved in browser local storage. This provides a replaceable seam for a future Supabase reservation data layer.
+The existing website creates confirmed reservations through `create_reservation`. Staff creation and inquiry conversion use that same RPC, preserving its time, capacity, and party-size validation. `reservation_inquiries` already exists and its website submissions remain valid without preferred date/time or party size. Inquiry status maps to the existing database values: `new`, `contacted`, and `closed`.
 
-## Staff password setup
+The dashboard reads through protected App Router server endpoints. Requests are checked by the existing shared-password session middleware before the service-role key is used. RLS remains enabled and browser roles have no table access. The service-role credential bypasses RLS, so it must remain server-side and dashboard API routes must stay behind the middleware.
 
-The dashboard uses one shared password. It has no email accounts, registration page, or Supabase Auth dependency. Set `STAFF_SHARED_PASSWORD` in `.env.local` and in your hosting provider’s server environment. Do not prefix it with `NEXT_PUBLIC_`.
+## Checks
 
-The password is checked and used to sign sessions on the server. Sign-in creates an HTTP-only, secure-in-production, same-site cookie with an eight-hour rolling expiry; active sessions refresh automatically on protected requests. Changing the password invalidates existing sessions. Use the deployment platform’s rate limiting/WAF on `/auth/login` to limit password guessing, and share the password privately with staff.
-
-No SQL migration or Supabase project change is needed for staff access. The existing reservation and website data, policies, and booking functionality are untouched.
+Run `npm run lint`, `npm run typecheck`, and `npm run build`.
