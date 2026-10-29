@@ -11,11 +11,11 @@ Staff dashboard for the restaurant’s existing Supabase reservation system. It 
 
 Use the existing project URL and its service-role key from the Supabase project settings. Keep the service-role key on the server only. Do not use a `NEXT_PUBLIC_` prefix, commit `.env.local`, or paste the key into chat.
 
-## Database migration
+## Database migrations
 
-Run `supabase/migrations/20261029000000_staff_dashboard.sql` once in the Supabase SQL Editor. It adds dashboard metadata to the existing `reservations` and `reservation_inquiries` tables and creates server-only booking/update/conversion RPCs. It does not recreate either table or change the public website booking RPC.
+The existing dashboard migrations are in `supabase/migrations/`. Do not rerun an old migration unless you have checked its effects in the target project. The dashboard uses the existing reservations table and does not require an Inbox or inquiry migration.
 
-The existing website creates confirmed reservations through `create_reservation`. Staff creation and inquiry conversion use that same RPC, preserving its time, capacity, and party-size validation. `reservation_inquiries` already exists and its website submissions remain valid without preferred date/time or party size. Inquiry status maps to the existing database values: `new`, `contacted`, and `closed`.
+The manual reservation form accepts any positive party size and leaves phone and email optional. To enable those staff inputs in production, review and run `supabase/migrations/20261030000000_staff_optional_contacts_large_parties.sql` in the Supabase SQL Editor. It updates only the existing staff RPCs and helper, retains the reservation capacity and business-hours checks, and leaves the public booking RPC's 1–10 party-size limit in place. The migration is not applied automatically by the dashboard.
 
 The dashboard reads through protected App Router server endpoints. Requests are checked by the existing shared-password session middleware before the service-role key is used. RLS remains enabled and browser roles have no table access. The service-role credential bypasses RLS, so it must remain server-side and dashboard API routes must stay behind the middleware.
 

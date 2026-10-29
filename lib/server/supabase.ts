@@ -33,9 +33,3 @@ export function reservationStatus(raw: string) {
   if (raw === "no_show") return "No-show";
   return "Confirmed";
 }
-
-export function inquiryStatus(raw: string) {
-  if (raw === "contacted") return "In progress";
-  if (raw === "closed") return "Handled";
-  return "New";
-}
