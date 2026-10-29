@@ -17,6 +17,8 @@ The existing dashboard migrations are in `supabase/migrations/`. Do not rerun an
 
 The manual reservation form accepts any positive party size and leaves phone and email optional. To enable those staff inputs in production, review and run `supabase/migrations/20261030000000_staff_optional_contacts_large_parties.sql` in the Supabase SQL Editor. It updates only the existing staff RPCs and helper, retains the reservation capacity and business-hours checks, and leaves the public booking RPC's 1–10 party-size limit in place. The migration is not applied automatically by the dashboard.
 
+Inbox inquiry deletion uses a server-only RPC. Run `supabase/migrations/20261030010000_staff_delete_inquiry.sql` to enable the Delete inquiry action; it deletes only the inquiry row, leaving any reservation created from that inquiry intact.
+
 The dashboard reads through protected App Router server endpoints. Requests are checked by the existing shared-password session middleware before the service-role key is used. RLS remains enabled and browser roles have no table access. The service-role credential bypasses RLS, so it must remain server-side and dashboard API routes must stay behind the middleware.
 
 ## Checks

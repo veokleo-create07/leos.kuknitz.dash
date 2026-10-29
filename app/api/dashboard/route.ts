@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, reservationStatus, SupabaseError } from "@/lib/server/supabase";
+import { db, inquiryStatus, reservationStatus, SupabaseError } from "@/lib/server/supabase";
 
 type DbReservation = { id:string; reservation_date:string; start_time:string; guests:number; guest_name:string; guest_email:string|null; guest_phone:string|null; special_requests:unknown; status:string; staff_status?:string; source?:string };
+type DbInquiry = { id:string; guest_name:string; guest_email:string|null; guest_phone:string|null; message:string; status:string; created_at:string; preferred_date:string|null; preferred_time:string|null; party_size:number|null; is_read:boolean; archived_at:string|null; converted_reservation_id:string|null };
 const json = (data: unknown, status=200) => NextResponse.json(data,{status,headers:{"Cache-Control":"private, no-store"}});
 const clean = (s:unknown) => typeof s === "string" ? s.trim() : "";
 const friendlyError=(e:unknown)=>{
@@ -13,6 +14,7 @@ const friendlyError=(e:unknown)=>{
   return raw;
 };
 const mapReservation = (r:DbReservation) => ({id:r.id,name:r.guest_name,phone:r.guest_phone??"",email:r.guest_email??"",guests:r.guests,date:r.reservation_date,time:r.start_time.slice(0,5),notes:Array.isArray(r.special_requests)?r.special_requests.filter(x=>typeof x==="string").join(" · "):"",source:r.source??"Website",status:reservationStatus(r.staff_status??r.status)});
+const mapInquiry = (i:DbInquiry) => ({id:i.id,name:i.guest_name,phone:i.guest_phone??"",email:i.guest_email??"",guests:i.party_size??0,preferredDate:i.preferred_date??i.created_at.slice(0,10),preferredTime:i.preferred_time?.slice(0,5)??"",message:i.message,status:inquiryStatus(i.status),unread:!i.is_read,receivedAt:i.created_at,archived:Boolean(i.archived_at),converted:Boolean(i.converted_reservation_id)});
 
 async function list(path:string) {
   const out:unknown[]=[];
@@ -27,8 +29,11 @@ export async function GET(request:NextRequest) {
   try {
     const from=request.nextUrl.searchParams.get("from")??"1900-01-01";
     const to=request.nextUrl.searchParams.get("to")??"2999-12-31";
-    const rawReservations=await list(`reservations?select=id,reservation_date,start_time,guests,guest_name,guest_email,guest_phone,special_requests,status,staff_status,source&reservation_date=gte.${encodeURIComponent(from)}&reservation_date=lte.${encodeURIComponent(to)}&order=reservation_date.asc,start_time.asc`);
-    return json({reservations:(rawReservations as DbReservation[]).map(mapReservation)});
+    const [rawReservations,rawInquiries]=await Promise.all([
+      list(`reservations?select=id,reservation_date,start_time,guests,guest_name,guest_email,guest_phone,special_requests,status,staff_status,source&reservation_date=gte.${encodeURIComponent(from)}&reservation_date=lte.${encodeURIComponent(to)}&order=reservation_date.asc,start_time.asc`),
+      list("reservation_inquiries?select=id,guest_name,guest_email,guest_phone,message,status,created_at,preferred_date,preferred_time,party_size,is_read,archived_at,converted_reservation_id&order=created_at.desc"),
+    ]);
+    return json({reservations:(rawReservations as DbReservation[]).map(mapReservation),inquiries:(rawInquiries as DbInquiry[]).map(mapInquiry)});
   } catch(e) { return json({error:e instanceof Error?e.message:"Could not load dashboard data."},e instanceof SupabaseError?e.status:500); }
 }
 
@@ -72,6 +77,26 @@ export async function POST(request:NextRequest) {
       if(!["confirmed","arrived","completed","cancelled","no_show"].includes(status)) return json({error:"Invalid reservation status."},400);
       await db(`reservations?id=eq.${encodeURIComponent(clean(body.id))}`,{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({staff_status:status,status:["cancelled","no_show"].includes(status)?"cancelled":"confirmed"})});
       return json({ok:true});
+    }
+    if(action==="inquiry") {
+      const id=clean(body.id), uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if(!uuid.test(id)) return json({error:"Invalid inquiry."},400);
+      const patch:Record<string,unknown>={updated_at:new Date().toISOString(),is_read:body.read===true?true:undefined,archived_at:body.archived===true?new Date().toISOString():body.archived===false?null:undefined};
+      if(typeof body.status==="string") patch.status=body.status==="In progress"?"contacted":body.status==="Handled"?"closed":"new";
+      Object.keys(patch).forEach(k=>patch[k]===undefined&&delete patch[k]);
+      await db(`reservation_inquiries?id=eq.${encodeURIComponent(id)}`,{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify(patch)});
+      return json({ok:true});
+    }
+    if(action==="delete-inquiry") {
+      const id=clean(body.id), uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if(!uuid.test(id)) return json({error:"Invalid inquiry."},400);
+      const deleted=await db("rpc/staff_delete_inquiry",{method:"POST",body:JSON.stringify({p_id:id})});
+      if(deleted!==true) return json({error:"Inquiry was not found."},404);
+      return json({ok:true});
+    }
+    if(action==="convert-inquiry") {
+      const result=await db("rpc/staff_convert_inquiry",{method:"POST",body:JSON.stringify({p_inquiry_id:clean(body.id),p_date:clean(body.date),p_time:clean(body.time),p_guests:Number(body.guests)||null})}) as {reservation_id:string;already_converted:boolean}[];
+      return json(result?.[0]??{});
     }
     return json({error:"Unknown dashboard action."},400);
   } catch(e) { return json({error:friendlyError(e)},e instanceof SupabaseError?e.status:500); }

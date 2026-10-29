@@ -15,3 +15,31 @@
 .form-error{border:1px solid #e8c8bd;border-radius:5px;background:#fbefea;color:#8e3f2d;padding:10px 12px;font-size:11px;line-height:1.5;margin-top:12px}
 .bulk-toolbar{display:flex;align-items:center;gap:12px;min-height:38px;margin:0 0 8px;color:var(--muted);font-size:11px}.bulk-select{display:inline-flex;align-items:center;gap:8px;cursor:pointer}.bulk-count{margin-left:auto}.reservation-select{width:14px;height:14px;margin:0;accent-color:var(--orange);cursor:pointer}.reservation-select:disabled{cursor:default}.select-column{width:34px}.select-column .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.danger-button{min-height:34px;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #e1b8aa;border-radius:5px;background:#fbefea;color:#9c3e27;padding:0 12px;font:500 11px var(--body);cursor:pointer}.danger-button:hover{background:#f6dfd6;border-color:#d99d89}.danger-button:focus-visible,.reservation-select:focus-visible{outline:2px solid var(--orange);outline-offset:2px}.wide-button.danger-button{width:100%}
 .language-toggle{display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid #ded6c8;border-radius:5px;background:var(--paper);width:max-content}.language-toggle button{height:25px;min-width:32px;padding:0 7px;border:0;border-radius:3px;background:transparent;color:var(--muted);font-size:9px;font-weight:600;cursor:pointer}.language-toggle button.active{background:var(--orange);color:white}.sidebar-language{margin:15px 12px 0;background:#2e2b27;border-color:#48433b}.sidebar-language button{color:#c6c0b5}.sidebar-language button.active{background:var(--orange);color:white}.login-language{margin-bottom:12px}.mobile-top{align-items:center}.mobile-top .language-toggle{margin-left:auto}
+
+/* Existing inquiry inbox layout */
+.inbox-layout{display:grid;grid-template-columns:minmax(280px,.82fr) minmax(0,1.5fr);gap:15px;height:calc(100vh - 245px);min-height:510px}
+.inbox-list{background:var(--paper);border:1px solid var(--line);border-radius:7px;overflow:hidden;display:flex;flex-direction:column}
+.inbox-list-top{padding:15px;border-bottom:1px solid var(--line)}
+.inbox-tabs{display:flex;gap:5px;margin-top:13px;overflow:auto}
+.inbox-tabs button{background:transparent;border:0;padding:6px 9px;color:var(--muted);border-radius:4px;font-size:10px;white-space:nowrap}
+.inbox-tabs button.active{background:#f3eee4;color:var(--ink)}
+.inbox-items{overflow-y:auto}
+.inquiry-preview{padding:14px 15px;border-bottom:1px solid #eee9df;cursor:pointer}
+.inquiry-preview:hover{background:#faf7f0}
+.inquiry-preview.active{background:#fbf5e8;border-left:2px solid var(--orange);padding-left:13px}
+.preview-row{display:flex;align-items:center;justify-content:space-between}
+.preview-name{font-size:11px;font-weight:600}
+.preview-time{font-size:9px;color:#999286}
+.preview-detail{font-size:10px;color:var(--muted);margin-top:7px}
+.preview-message{font-size:10px;color:#716d64;margin-top:8px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inbox-detail{background:var(--paper);border:1px solid var(--line);border-radius:7px;display:flex;flex-direction:column;overflow:hidden;min-height:450px}
+.inbox-detail-head{padding:15px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start}
+.message-area{padding:16px;flex:1;overflow:auto;display:flex;flex-direction:column;gap:15px}
+.message-bubble{max-width:92%;background:#f3eee4;padding:12px 14px;border-radius:4px 12px 12px 12px;font-size:11px;line-height:1.65;color:#49463e}
+.message-meta{font-size:9px;color:#999286;margin-top:7px}
+.inquiry-actions{display:flex;gap:7px;flex-wrap:wrap;padding:0 12px 12px}
+.nav-link .badge{margin-left:auto;background:#f2eee3;color:var(--orange);font-size:10px;font-weight:700;padding:3px 7px;border-radius:20px}
+.status.in-progress{background:#f5eadf;color:#a96938}
+.status.handled{background:#edf0e8;color:var(--olive)}
+.status.new{background:#f5eadf;color:var(--orange)}
+@media(max-width:900px){.inbox-layout{display:flex;height:auto;min-height:0;flex-direction:column}.inbox-list{min-height:390px}.inbox-detail{min-height:450px}.inbox-detail-head{padding:15px}.message-area{padding:16px}.message-bubble{max-width:92%}.inquiry-actions{padding:0 12px 12px}.bottom-nav .badge{font-size:8px;background:var(--orange);color:white;border-radius:10px;padding:1px 5px;position:absolute;top:-1px;right:-8px;margin:0}}
