@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRight, ShoppingBag } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 import { LanguageToggle, Translated } from "@/components/language";
 
 const errors: Record<string, string> = {
@@ -16,8 +17,7 @@ export default function LoginForm({ errorCode, signedOut }: { errorCode?: string
     <Translated><main className="login-shell">
       <section className="login-brand-panel" aria-label="Leo’s Juice & Burger">
         <div className="login-brand">
-          <span className="brand-mark"><ShoppingBag size={20} /></span>
-          <span><strong>Leo’s</strong><small>Juice & Burger</small></span>
+          <Image className="login-brand-logo" src="/leos-juice-burger-badge.png" alt="Leo’s Juice & Burger" width={112} height={112} priority />
         </div>
         <div className="login-brand-copy">
           <h1>Welcome back.</h1>
