@@ -20,19 +20,14 @@ export default function LoginForm({ errorCode, signedOut }: { errorCode?: string
           <span><strong>Leo’s</strong><small>Juice & Burger</small></span>
         </div>
         <div className="login-brand-copy">
-          <p className="login-kicker">Good food. Good company.</p>
-          <h1>Every service<br />starts with you.</h1>
-          <p className="login-brand-note">A quieter place to take care of the details that make a visit memorable.</p>
+          <h1>Welcome back.</h1>
         </div>
-        <p className="login-brand-footer">Staff workspace · Tirana</p>
       </section>
 
       <section className="login-form-panel">
         <div className="login-form-wrap">
           <LanguageToggle className="login-language" />
-          <p className="eyebrow">Staff workspace</p>
-          <h2 className="login-title">Welcome back</h2>
-          <p className="login-description">Enter the shared staff password to continue.</p>
+          <p className="login-description">Enter the staff password.</p>
           {signedOut && <div className="login-success" role="status">You’ve been signed out.</div>}
           {errorCode && <div className="login-alert" role="alert">{errors[errorCode] ?? errors.invalid_request}</div>}
           <form className="login-form" action="/auth/login" method="post">
@@ -51,7 +46,6 @@ export default function LoginForm({ errorCode, signedOut }: { errorCode?: string
               Sign in <ArrowRight size={15} />
             </button>
           </form>
-          <p className="login-help">Ask your manager for the staff password.</p>
         </div>
       </section>
     </main></Translated>
