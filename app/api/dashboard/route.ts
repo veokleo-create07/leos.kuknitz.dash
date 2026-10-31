@@ -17,10 +17,13 @@ const mapReservation = (r:DbReservation) => ({id:r.id,name:r.guest_name,phone:r.
 const mapInquiry = (i:DbInquiry) => ({id:i.id,name:i.guest_name,phone:i.guest_phone??"",email:i.guest_email??"",guests:i.party_size??0,preferredDate:i.preferred_date??i.created_at.slice(0,10),preferredTime:i.preferred_time?.slice(0,5)??"",message:i.message,status:inquiryStatus(i.status),unread:!i.is_read,receivedAt:i.created_at,archived:Boolean(i.archived_at),converted:Boolean(i.converted_reservation_id)});
 
 async function list(path:string) {
-  const out:unknown[]=[];
-  for(let offset=0;offset<1000000;offset+=1000) {
-    const page=await db(`${path}&limit=1000&offset=${offset}`) as unknown[];
-    out.push(...page); if(page.length<1000) break;
+  const first=await db(`${path}&limit=1000&offset=0`) as unknown[];
+  const out=[...first];
+  if(first.length<1000) return out;
+  for(let offset=1000;offset<1000000;offset+=3000) {
+    const pages=await Promise.all([0,1000,2000].map(skip=>db(`${path}&limit=1000&offset=${offset+skip}`) as Promise<unknown[]>));
+    for(const page of pages) out.push(...page);
+    if(pages.some(page=>page.length<1000)) break;
   }
   return out;
 }
@@ -29,6 +32,8 @@ export async function GET(request:NextRequest) {
   try {
     const from=request.nextUrl.searchParams.get("from")??"1900-01-01";
     const to=request.nextUrl.searchParams.get("to")??"2999-12-31";
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||from>to)
+      return json({error:"Choose a valid reservation date range."},400);
     const [rawReservations,rawInquiries]=await Promise.all([
       list(`reservations?select=id,reservation_date,start_time,guests,guest_name,guest_email,guest_phone,special_requests,status,staff_status,source&reservation_date=gte.${encodeURIComponent(from)}&reservation_date=lte.${encodeURIComponent(to)}&order=reservation_date.asc,start_time.asc`),
       list("reservation_inquiries?select=id,guest_name,guest_email,guest_phone,message,status,created_at,preferred_date,preferred_time,party_size,is_read,archived_at,converted_reservation_id&order=created_at.desc"),
