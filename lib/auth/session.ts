@@ -1,8 +1,8 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 export const STAFF_SESSION_COOKIE = "leo_staff_session";
-// Authenticated requests extend the session, so this is a six-month idle window.
-export const STAFF_SESSION_SECONDS = 60 * 60 * 24 * 30 * 6;
+// Authenticated requests extend the session, providing a persistent staff login.
+export const STAFF_SESSION_SECONDS = 60 * 60 * 24 * 365 * 10;
 
 function sharedPassword() {
   const password = process.env.STAFF_SHARED_PASSWORD;

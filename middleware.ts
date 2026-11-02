@@ -2,8 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const cookieName = "leo_staff_session";
 const loginPath = "/login";
-// Sliding six-month idle window: authenticated requests issue a fresh cookie.
-const sessionSeconds = 60 * 60 * 24 * 30 * 6;
+// Persistent staff login: authenticated requests renew a ten-year cookie.
+// Signing out or changing STAFF_SHARED_PASSWORD invalidates access immediately.
+const sessionSeconds = 60 * 60 * 24 * 365 * 10;
 const sessionKeyLabel = "Leo's Juice & Burger staff session signing key v1";
 
 async function sessionSigningKey(password: string, usage: KeyUsage) {
