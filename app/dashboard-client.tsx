@@ -16,7 +16,7 @@ const today=()=>{const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/B
 const shift=(s:string,n:number)=>{const d=new Date(`${s}T12:00:00Z`);d.setUTCDate(d.getUTCDate()+n);return iso(d)};
 const fmt=(s:string,o:Intl.DateTimeFormatOptions={weekday:"long",day:"numeric",month:"long"})=>s?new Intl.DateTimeFormat(currentLocale(),{...o,timeZone:"Europe/Berlin"}).format(new Date(`${s.slice(0,10)}T12:00:00Z`)):"Date not specified";
 const weekStart=(s:string)=>{const d=new Date(`${s}T12:00:00Z`);d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);return iso(d)};
-const forDate=(r:Reservation[],d:string)=>r.filter(x=>x.date===d);
+const forDate=(r:Reservation[],d:string)=>r.filter(x=>x.date.slice(0,10)===d.slice(0,10));
 const active=(r:Reservation[])=>r.filter(x=>!['Cancelled','No-show'].includes(x.status));
 const initials=(s:string)=>s.split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase();
 async function request(action:string,data:Record<string,unknown>={}){const res=await fetch("/api/dashboard",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action,...data})});const result=await res.json();if(!res.ok)throw new Error(result.error||"The request failed.");return result}
